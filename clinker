@@ -6,6 +6,11 @@
 " '536 A.2d 1337 n. 4' and citations with flags in them referencing 	       "
 " dispositions 'appeal denied, 519 Pa. 667, (1988)'.			       "
 " 									       "
+" The original works by looking for the date '(\d\d\d\d)', then building XML   "
+" tags around the found piece of citation, and then running through the file   "
+" again with a different regular expression, again adding XML as it goes. In   "
+" this way it works from right to left to build up a citation. 		       "
+" 									       "
 " /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ "
 
 " This makes sure that the file doesn't become an admixture of \n and \r's. Set to DOS for no particular reason; DB and Editors are agnostic.
