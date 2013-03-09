@@ -1,0 +1,248 @@
+" /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ "
+"			      C A S E L I N K E R 			       "
+" 									       "
+" This script breaks down cases and adds the correct tags. YES, I know, I need "
+" to convert this to 'very magic' mode. Needs to handle footnotes citations    "
+" '536 A.2d 1337 n. 4' and citations with flags in them referencing 	       "
+" dispositions 'appeal denied, 519 Pa. 667, (1988)'.			       "
+" 									       "
+" /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ "
+
+" This makes sure that the file doesn't become an admixture of \n and \r's. Set to DOS for no particular reason; DB and Editors are agnostic.
+silent set ff=dos
+
+" Because you know someone will use 'vs.' and throw the whole thing off
+silent! %s! vs\. ! v. !g
+
+" Tag the <phrase>. 
+" The leading '(\d )' ensures that we exclude things like '(Exhibit T. 1732)' 
+" by looking for the end of the case citation before it.
+" ---------------------------------------------------------------------------- " 
+silent! %s!\(\d,\= \)\(([A-Za-z0-9,'\. ]*\d\d\d\d)\)\([\.;, ]\=\)!\1<phrase role="dept_and_year">\2</phrase>\3!g
+
+" (\d,?)(\([\w,'\. ]*\d{4}\))([\.;, ]?])
+
+" Tag any cases already tagged with a <phrase> with <citation> and 
+" <citation role="parallel_citation">. Semicolon catches ';' in '&amp;'. 
+" The '\*' asterisk catches those star cites (*7) that copypasta attorneys 
+" like to use from Lexis.
+" ---------------------------------------------------------------------------- " 
+silent! %s!, \([0-9_]\+ [A-Za-z0-9#&;\. ]\+ [0-9_,\*\- ]\+\), \([0-9_]\+ [A-Za-z0-9#;&\. ]\+ [0-9_,\*\- ]\+\) <phrase!, <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase!g
+
+" ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase
+
+" Tag the <citation> (without parallel cites). Will catch trailing pinpoint
+" citations.
+" ---------------------------------------------------------------------------- " 
+silent! %s!, \([0-9_]* [A-Za-z0-9\.#&; ]* [0-9_,\-#&; ]*\) <phrase!, <citation>\1</citation> <phrase!g
+
+" , ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase
+
+" Tag the <citation> for citing footnotes.
+" ---------------------------------------------------------------------------- " 
+silent! %s!, \([0-9_]\+ [A-Za-z0-9#&;\. ]\+ [0-9_,\- ]\+ [Nn]\.[0-9]*\) <phrase!, <citation>\1</citation> <phrase!g
+
+" , ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase
+
+" Tag citation and phrase with <bibliomisc>. The \{-} is important, otherwise
+" the search is too greedy and finds whole paragraph.
+" ---------------------------------------------------------------------------- " 
+silent! %s!\(<citation>.\{-}</phrase>\)!<bibliomisc>\1</bibliomisc>!g
+
+" <citation>.+?</phrase>
+
+" Tag the <title>. This regex looks for a string of words that have leading 
+" capitol letters followed by a 'v.' and terminates on the following 
+" <bibliomisc> tag. While this catches plaintiffs with multiple names, it will
+" catch the 'When' in 'When Frank Rizzo, Inc. v. Foo was decided . . .' These
+" false positives are removed by later regexs. This algorithm will miss
+" 'Insurance Society of' in 'Insurance Society of Pennsylvania' or the ''t' in
+" case names like ''t Hooft v. Smith' because it is looking for a string
+" of capitalized words.
+" ---------------------------------------------------------------------------- " 
+silent! %s!\(\(\<[A-Z][A-Za-z,\-\.()'#;&]\+ \)*\)v\. \([A-Za-z0-9,\-\.()'#;& ]\+\), <bibliomisc!<title role="casename">\1v. \3</title>, <bibliomisc!g
+
+" (([A-Z][\w,\-\.\(\)'#&;]+ )+)v\. ([\w,\-\.\(\)'#&; ]+), <bibliomisc
+
+" ---------------------------------------------------------------------------- " 
+" Special Cases
+" ---------------------------------------------------------------------------- " 
+
+" Finds and tags with <title> 'In re Foo'.
+silent! %s!\([Ii]n [Rr]e [A-Za-z0-9' ]\+\), <bibliomisc!<title role="casename">\1</title>, <bibliomisc!g
+
+" ([Ii]n [Rr]e [\w' ]+), <bibliomisc
+
+" Finds and tags 'Ex rel. Foo'.
+silent! %s!\([Ee]x [Rr]el. [A-Za-z0-9' ]\+\), <bibliomisc!<title role="casename">\1</title>, <bibliomisc!g
+
+" ([Ee]x [Rr]el.? [\w' ]+), <bibliomisc
+
+" ---------------------------------------------------------------------------- "
+" Removing incorrectly tagged words, mostly because they lead a sentence and 
+" are capitalized.
+" Emphasizes flags.
+" ---------------------------------------------------------------------------- "
+
+" Removes wrongly found 'In' ('In Foo v. Bar . . .') from citation titles without messing up 'In re' cases.
+silent! %s#<title role="casename">\(In \([Rr]e\)\@!\)#In <title role="casename">#g
+
+" As above, with 'When'
+silent! %s!<title role="casename">When !When <title role="casename>!g
+
+" As above, with 'Yes. '
+silent! %s!<title role="casename">Yes\([\., ]\) !Yes\1<title role="casename">!g
+
+" As above, with 'No. '
+silent! %s!<title role="casename">No\([\., ]\) !No\1 <title role="casename">!g
+
+" As above, with 'Contra'. Adds emphasis.
+silent! %s!<title role="casename">Contra !<emphasis role="italic">Contra</emphasis> <title role="casename">!g
+
+" As above, with 'Accord'. Adds emphasis.
+silent! %s!<title role="casename">Accord !<emphasis role="italic">Accord</emphasis> <title role="casename">!g
+
+" As above, with 'Compare'. Adds emphasis.
+silent! %s!<title role="casename">Compare !<emphasis role="italic">Compare</emphasis> <title role="casename">!g
+
+" As above, with 'However,'. Adds emphasis.
+silent! %s!<title role="casename">However\(,\)\= !<emphasis role="italic">However\1</emphasis> <title role="casename">!g
+
+" As above, with 'See'. Adds emphasis.
+silent! %s!<title role="casename">See,\= !<emphasis role="italic">See</emphasis>, <title role="casename">!g
+
+" As above, with 'Citing'. Adds emphasis.
+silent! %s!<title role="casename">Citing !<emphasis role="italic">Citing</emphasis> <title role="casename">!g
+
+" ---------------------------------------------------------------------------- "
+" Finishes the tag
+" ---------------------------------------------------------------------------- "
+
+" Tag the whole citation with <bibliolist><bibliomixed>. The '\{-}' is
+" important, prevents the RegEx from finding too much.
+silent! %s!\(<title role="casename">.\{-}</bibliomisc>\)!<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>!g
+
+" ---------------------------------------------------------------------------- "
+" More special cases, this time moving case names with necessarily variable 
+" capitalization into the tag.
+" ---------------------------------------------------------------------------- "
+
+" Moves missed 'ex rel.' into the title tag.
+silent! %s!\([Ee]x [Rr]el\. \)<bibliolist>!<bibliolist>\1 !g
+
+" Moves missed 'ex parte' into the title tag.
+silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
+
+" ---------------------------------------------------------------------------- "
+" Emphasize flags
+"
+" The following list of flags is troublesome---each can be used in normal 
+" discussion of a case, and would not be highlighted there:
+"
+" affirmed
+" abrogated
+" overruled by
+" remanded
+" vacated
+" appeal denied
+" ---------------------------------------------------------------------------- "
+
+" But cf. and Cf.
+silent! %s!But, \([Cc]f\.\)!But \1!g
+silent! %s!\(But \)\=\([Cc]\)f\.!<emphasis role="italic">\1\2f.</emphasis>!g
+
+" Correct I.d.
+silent! %s!I\.[Dd]\.!Id.!g
+
+" Id.
+silent! %s!\<Id\.\>! <emphasis role="italic">&</emphasis>!g
+
+" Ibid.
+silent! %s!Ibid\.!<emphasis role="italic">&</emphasis>!g
+
+" Accord
+silent! %s!\<Accord\>!<emphasis role="italic">&</emphasis> <!g
+
+" See, e.g.,
+silent! %s!See,\= e\.g\.,\=!<emphasis role="italic">See</emphasis>, <emphasis role="italic">e.g.</emphasis>,!g
+
+" See also, 
+silent! %s![Ss]ee [Aa]lso,\=!<emphasis role="italic">See also</emphasis>,!g
+
+" See also, e.g.,
+silent! %s![Ss]ee [Aa]lso,\= e\.g\.,!<emphasis role="italic">See also</emphasis>, <emphasis role="italic">e.g.</emphasis>,!g
+
+" But see, e.g.,
+silent! %s!But [Ss]ee,\= e\.g\.,\=!<emphasis role="italic">But see</emphasis>, <emphasis role="italic">e.g.</emphasis>,!g
+
+" aff'd
+silent! %s![Aa]ff'd!<emphasis role="italic">\L&\e</emphasis>!g
+
+" aff'd per curiam
+silent! %s![Aa]ff'd per curiam!<emphasis role="italic">\L&\e</emphasis>!g
+
+" cert. denied
+silent! %s![Cc]ert\. [Dd]enied!<emphasis role="italic">\L&\e</emphasis>!g
+
+" cert. dismissed
+silent! %s![Cc]ert\. [Dd]ismissed!<emphasis role="italic">\L&\e</emphasis>!g
+
+" mem.
+silent! %s!\<[Mm]em\.\>!<emphasis role="italic">\L&\e</emphasis>!g
+
+" rev'd on other grounds
+silent! %s![Rr]ev'd on other grounds!<emphasis role="italic">\L&\e</emphasis>!g
+
+" rev'd in banc and rev'd en banc
+silent! %s![Rr]ev'd [IiEe]n [Bb]anc!<emphasis role="italic">\L&\e</emphasis>!g
+
+" rev'd
+silent! %s![Rr]ev'd!<emphasis role="italic">\L&\e</emphasis>!g
+
+" ---------------------------------------------------------------------------- "
+" Un-tags cases that we cannot actually link to, because they are in 
+" proprietary LEXIS or WEST reporters.
+" 
+" To add:
+" Pa. C
+" Pa. D
+" Pa. D. & C.
+" Pa. D. & C.2nd
+" Pa. D. & C.3rd
+" And corrections for misspellings 
+" ---------------------------------------------------------------------------- "
+
+" Finds failed tags (LEXIS and WL, mostly ) and untags them . . .
+silent! %s#<phrase role="dept_and_year">\(([A-Za-z0-9,'\. ]*\d\d\d\d)\)<\/phrase>\(<\/bibliomisc>\)\@!#\1#g
+
+" Finds failed title tags and untags them
+silent! %s#\(<bibliomixed>\)\@<!<title role="casename">\(\([A-Za-z,\-\.()'#;&]\+ \)*\)v\. \([A-Za-z0-9,\-\.()'#;& ]\+\)\)<\/title>#\2v. \4#g
+
+" . . . and then tags them in italic
+silent! %s!\(\(\<[A-Z][A-Za-z,\-\.()'#;&]\+ \)*\)v\. \([A-Za-z0-9,\-\.()'#;& ]\+\), \(\d\+\) \(WL\|LEXIS\) \(\d\+\)[\., ]!<emphasis role="italic">\1v. \3</emphasis>, \4 \5 \6!g
+
+" ---------------------------------------------------------------------------- "
+" Adds '\r' to help with the formating, like so:
+"
+" <para> Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+"        <bibliolist><bibliomixed>
+"                <title role="casename">Weems v. Citigroup, Inc.</title>,
+"                        <bibliomisc>
+"                                <citation>289 Conn. 769</citation>
+"                                <phrase role="dept_and_year">(2008)</phrase>
+"                        </bibliomisc>
+"        </bibliomixed></bibliolist>
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. </para>
+" ---------------------------------------------------------------------------- "
+
+silent! %s!\(<bibliolist><bibliomixed>.\{-}</bibliomixed></bibliolist>\)!\r\1!g
+silent! %s!\(<title.\{-}</title>, \)!\r\1!g
+silent! %s!\(<bibliomisc>.\{-}</bibliomisc>\)!\r\1!g
+silent! %s!\(<citation>.\{-}</citation> \)!\r\1!g
+silent! %s!\(<citation role="parallel_citation">.\{-}</citation> \)!\r\1!g
+silent! %s!\(<phrase.\{-}</phrase>\)!\r\1!g
+silent! %s!</bibliomisc>!\r&!g
+silent! %s!</bibliomixed></bibliolist>[\.,; ]!\r&\r!g
+
+" Clears the search register
+let @/ = ""
