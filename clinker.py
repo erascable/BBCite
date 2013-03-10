@@ -13,77 +13,56 @@
 # 									       #
 # ---------------------------------------------------------------------------- #
 
-# This makes sure that the file doesn't become an admixture of \n and \r's. Set to DOS for no particular reason; DB and Editors are agnostic.
-# silent set ff=dos
+import os
 
-# Because you know someone will use 'vs.' and throw the whole thing off
-# silent! %s! vs\. ! v. !g
+targetfile = "FILE.xml"
+os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+".xml~")
+f = open(os.path.realpath(targetfile), "w")
 
-STRING.replace(' vs. ', ' v. ')
-
-# Tag the <phrase>. 
-# The leading '(\d )' ensures that we exclude things like '(Exhibit T. 1732)' 
-# by looking for the end of the case citation before it.
 # ---------------------------------------------------------------------------- # 
-# silent! %s!\(\d,\= \)\(([A-Za-z0-9,'\. ]*\d\d\d\d)\)\([\.;, ]\=\)!\1<phrase role="dept_and_year">\2</phrase>\3!g
-
-re.sub('\d,?)(\([\w,\'\. ]*\d{4}\))([\.;, ]?])', '\1<phrase role="dept_and_year">\2</phrase>\3')
-
-# Tag any cases already tagged with a <phrase> with <citation> and 
-# <citation role="parallel_citation">. Semicolon catches ';' in '&amp;'. 
-# The '\*' asterisk catches those star cites (*7) that copypasta attorneys 
-# like to use from Lexis.
+# File manipulation
 # ---------------------------------------------------------------------------- # 
-# silent! %s!, \([0-9_]\+ [A-Za-z0-9#&;\. ]\+ [0-9_,\*\- ]\+\), \([0-9_]\+ [A-Za-z0-9#;&\. ]\+ [0-9_,\*\- ]\+\) <phrase!, <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase!g
 
-re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', ', <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase>')
-
-# Tag the <citation> (without parallel cites). Will catch trailing pinpoint
-# citations.
-# ---------------------------------------------------------------------------- # 
-# silent! %s!, \([0-9_]* [A-Za-z0-9\.#&; ]* [0-9_,\-#&; ]*\) <phrase!, <citation>\1</citation> <phrase!g
-
-re.sub(', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', ', <citation>\1</citation> <phrase')
-
-# Tag the <citation> for citing footnotes.
-# ---------------------------------------------------------------------------- # 
-# silent! %s!, \([0-9_]\+ [A-Za-z0-9#&;\. ]\+ [0-9_,\- ]\+ [Nn]\.[0-9]*\) <phrase!, <citation>\1</citation> <phrase!g
-
-re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', ', <citaiton>\1</citation> <phrase')
-
-# Tag citation and phrase with <bibliomisc>. The \{-} is important, otherwise
-# the search is too greedy and finds whole paragraph.
-# ---------------------------------------------------------------------------- # 
-# silent! %s!\(<citation>.\{-}</phrase>\)!<bibliomisc>\1</bibliomisc>!g
-
-re.sub('<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>')
-
-# Tag the <title>. This regex looks for a string of words that have leading 
-# capitol letters followed by a 'v.' and terminates on the following 
-# <bibliomisc> tag. While this catches plaintiffs with multiple names, it will
-# catch the 'When' in 'When Frank Rizzo, Inc. v. Foo was decided . . .' These
-# false positives are removed by later regexs. This algorithm will miss
-# 'Insurance Society of' in 'Insurance Society of Pennsylvania' or the ''t' in
-# case names like ''t Hooft v. Smith' because it is looking for a string
-# of capitalized words.
-# ---------------------------------------------------------------------------- # 
-# silent! %s!\(\(\<[A-Z][A-Za-z,\-\.()'#;&]\+ \)*\)v\. \([A-Za-z0-9,\-\.()'#;& ]\+\), <bibliomisc!<title role="casename">\1v. \3</title>, <bibliomisc!g
-
-re.sub('(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', '<title role="casename">\1v. \3</title>, <bibliomisc')
+while 1:
+    lines = f.readlines(100000)
+    if not lines:
+        break
+    for line in lines:
+        f.replace(' vs. ', ' v. ')
+	# Tag the <phrase>. 
+	# The leading '(\d )' ensures that we exclude things like '(Exhibit T. 1732)' 
+	# by looking for the end of the case citation before it.
+        re.sub('\d,?)(\([\w,\'\. ]*\d{4}\))([\.;, ]?])', '\1<phrase role="dept_and_year">\2</phrase>\3')
+	# Tag any cases already tagged with a <phrase> with <citation> and 
+	# <citation role="parallel_citation">. Semicolon catches ';' in '&amp;'. 
+	# The '\*' asterisk catches those star cites (*7) that copypasta attorneys 
+	# like to use from Lexis.
+        re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', ', <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase>')
+	# Tag the <citation> (without parallel cites). Will catch trailing pinpoint
+	# citations.
+        re.sub(', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', ', <citation>\1</citation> <phrase')
+	# Tag the <citation> for citing footnotes.
+        re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', ', <citaiton>\1</citation> <phrase')
+	# Tag citation and phrase with <bibliomisc>. The \{-} is important, otherwise
+	# the search is too greedy and finds whole paragraph.
+        re.sub('<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>')
+	# Tag the <title>. This regex looks for a string of words that have leading 
+	# capitol letters followed by a 'v.' and terminates on the following 
+	# <bibliomisc> tag. While this catches plaintiffs with multiple names, it will
+	# catch the 'When' in 'When Frank Rizzo, Inc. v. Foo was decided . . .' These
+	# false positives are removed by later regexs. This algorithm will miss
+	# 'Insurance Society of' in 'Insurance Society of Pennsylvania' or the ''t' in
+	# case names like ''t Hooft v. Smith' because it is looking for a string
+	# of capitalized words.
+        re.sub('(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', '<title role="casename">\1v. \3</title>, <bibliomisc')
 
 # ---------------------------------------------------------------------------- # 
 # Special Cases
 # ---------------------------------------------------------------------------- # 
-
-# Finds and tags with <title> 'In re Foo'.
-# silent! %s!\([Ii]n [Rr]e [A-Za-z0-9' ]\+\), <bibliomisc!<title role="casename">\1</title>, <bibliomisc!g
-
-re.sub('[Ii]n [Rr]e [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
-
-# Finds and tags 'Ex rel. Foo'.
-# silent! %s!\([Ee]x [Rr]el. [A-Za-z0-9' ]\+\), <bibliomisc!<title role="casename">\1</title>, <bibliomisc!g
-
-re.sub('[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
+	# Finds and tags with <title> 'In re Foo'.
+        re.sub('[Ii]n [Rr]e [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
+	# Finds and tags 'Ex rel. Foo'.
+        re.sub('[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
 
 # ---------------------------------------------------------------------------- #
 # Removing incorrectly tagged words, mostly because they lead a sentence and 
@@ -250,3 +229,9 @@ re.sub('[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', '<title role="casename">\1</titl
 # silent! %s!\(<phrase.\{-}</phrase>\)!\r\1!g
 # silent! %s!</bibliomisc>!\r&!g
 # silent! %s!</bibliomixed></bibliolist>[\.,; ]!\r&\r!g
+
+    else:
+        break
+
+f.write('<!-- BBCite on DATE -->')
+f.close()
