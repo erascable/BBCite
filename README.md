@@ -16,25 +16,25 @@ Will be able to identify and manipulate these elements:
 ## Standard Citations
 
 Foo v. Bar, 123 AB.&C 456 (2002).
-	Composition: casename, citation, date
+Composition: casename, citation, date
 	
 Foo v. Bar, Inc., 123 ABC 456, 789 (1932);
-	Composition: casename, citation, pinpoint citation, date
+Composition: casename, citation, pinpoint citation, date
 
 Foo O'Bar v. Bar, 123 ABC 456, 321 DEF2d. 678 (USSC 1999),
-	Composition: casename, citation, parallel citation 1, date
+Composition: casename, citation, parallel citation 1, date
 
 Foo of Bar v. Bar, Inc, 123 ABC 456, n. *8 ('t Hooft, 1992),
-	Composition: casename, citation, footnote citation, date
+Composition: casename, citation, footnote citation, date
 
 In re Bar, 789 ABC 987, 800, 123 DEF 456, 201, 222 GHI 333, 300 (remanded 1920);
-	Composition: casename, citation, parallel citation 1, parallel citation 2, date
+Composition: casename, citation, parallel citation 1, parallel citation 2, date
 
 Foo v. Bar, 123 ABC 456 (D.C. Cir. 1983), rev'd 222 GHI 444 (1984).
-	Composition: casename, citation, date, flag, clag citation, date
+Composition: casename, citation, date, flag, clag citation, date
 
 Foo, 123 ABC at 155 (1929).
-	Composition: short casename, at citation, date
+Composition: short casename, at citation, date
 
 ## Case names
 
@@ -47,6 +47,7 @@ Insurance Society of Foo v. O'Bar,
 		plaintiff('Foo')
 		defendant('Bar', 'Bar, Inc.')
 		v('v.', 'vs.', 'v', 'vs') [various capitulations]
+
 In re Foo,
 In regards to Foo,
 In the matter of Foo,
@@ -54,7 +55,9 @@ Ex rel Bar,
 Ex relatione Bar,
 	latin_casename('In re', 'In the matter of', 'Ex rel', 'Ex rel.') [various capitalizations and punctuation]
 	latin_casename(latin, name)
+
 ## Date
+
 (1929)
 (D.C Cir. 1983)
 (Johnson, 1999)
@@ -82,11 +85,13 @@ ___ ABC ___,
 		reporter(BC.2d)
 		page(987)
 		pinpoint_citation(1000)
+
 	citation(___ ABC ___,)
 		book(___)
 		reporter(ABC)
 		page(___)	
 
+	
 	citation(789 ABC 987, 800, 123 DEF 456, 201, 222 GHI 333, 300)
 		book(789)
 		reporter(ABC)
@@ -189,8 +194,6 @@ def short_citation
 	citation
 	year	
 
-
-
 Case name
 Volume
 Reporter
@@ -254,7 +257,5 @@ Action
 Day/Month
 Year
 Weight of authority
-Hist. action
-Hist. cite
-
-http://www.legalcitation.net/qfields.htm
+History action
+History cite
