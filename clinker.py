@@ -1,10 +1,9 @@
 # ---------------------------------------------------------------------------- #
 #			      C A S E L I N K E R 			       #
 # 									       #
-# This script breaks down cases and adds the correct tags. YES, I know, I need #
-# to convert this to 'very magic' mode. Needs to handle footnotes citations    #
-# '536 A.2d 1337 n. 4' and citations with flags in them referencing 	       #
-# dispositions 'appeal denied, 519 Pa. 667, (1988)'.			       #
+# This script breaks down cases and adds the correct tags. Needs to handle     #
+# footnotes citations such as '536 A.2d 1337 n. 4' and citations with flags in #
+# them referencing dispositions 'appeal denied, 519 Pa. 667, (1988)'. 	       #
 # 									       #
 # The original works by looking for the date '(\d\d\d\d)', then building XML   #
 # tags around the found piece of citation, and then running through the file   #
@@ -13,11 +12,31 @@
 # 									       #
 # ---------------------------------------------------------------------------- #
 
+# ---------------------------------------------------------------------------- #
+# Converts Lorem ipsum dolor sit amet, consectetur dipiscing elit. Weems v.
+# Citigroup, Inc., 289 Conn. 769 (2008).
+# 
+# Into the following:
+#
+# <para> Lorem ipsum dolor sit amet, consectetur adipiscing elit
+#        <bibliolist><bibliomixed>
+#                <title role="casename">Weems v. Citigroup, Inc.</title>,
+#                        <bibliomisc>
+#                                <citation>289 Conn. 769</citation>
+#                                <phrase role="dept_and_year">(2008)</phrase>
+#                        </bibliomisc>
+#        </bibliomixed></bibliolist>
+# .</para> 
+# ---------------------------------------------------------------------------- #
+
 import os
 
 targetfile = "FILE.xml"
 os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+".xml~")
 f = open(os.path.realpath(targetfile), "w")
+
+with open('f', 'w')
+    data = file.readlines()
 
 # ---------------------------------------------------------------------------- # 
 # File manipulation
@@ -55,7 +74,6 @@ while 1:
 	# case names like ''t Hooft v. Smith' because it is looking for a string
 	# of capitalized words.
         re.sub('(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', '<title role="casename">\1v. \3</title>, <bibliomisc')
-
 # ---------------------------------------------------------------------------- # 
 # Special Cases
 # ---------------------------------------------------------------------------- # 
@@ -63,43 +81,32 @@ while 1:
         re.sub('[Ii]n [Rr]e [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
 	# Finds and tags 'Ex rel. Foo'.
         re.sub('[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
-
 # ---------------------------------------------------------------------------- #
 # Removing incorrectly tagged words, mostly because they lead a sentence and 
 # are capitalized.
 # Emphasizes flags.
 # ---------------------------------------------------------------------------- #
-
-# Removes wrongly found 'In' ('In Foo v. Bar . . .') from citation titles without messing up 'In re' cases.
-# silent! %s#<title role="casename">\(In \([Rr]e\)\@!\)#In <title role="casename">#g
-
-# As above, with 'When'
-# silent! %s!<title role="casename">When !When <title role="casename>!g
-
-# As above, with 'Yes. '
-# silent! %s!<title role="casename">Yes\([\., ]\) !Yes\1<title role="casename">!g
-
-# As above, with 'No. '
-# silent! %s!<title role="casename">No\([\., ]\) !No\1 <title role="casename">!g
-
-# As above, with 'Contra'. Adds emphasis.
-# silent! %s!<title role="casename">Contra !<emphasis role="italic">Contra</emphasis> <title role="casename">!g
-
-# As above, with 'Accord'. Adds emphasis.
-# silent! %s!<title role="casename">Accord !<emphasis role="italic">Accord</emphasis> <title role="casename">!g
-
-# As above, with 'Compare'. Adds emphasis.
-# silent! %s!<title role="casename">Compare !<emphasis role="italic">Compare</emphasis> <title role="casename">!g
-
-# As above, with 'However,'. Adds emphasis.
-# silent! %s!<title role="casename">However\(,\)\= !<emphasis role="italic">However\1</emphasis> <title role="casename">!g
-
-# As above, with 'See'. Adds emphasis.
-# silent! %s!<title role="casename">See,\= !<emphasis role="italic">See</emphasis>, <title role="casename">!g
-
-# As above, with 'Citing'. Adds emphasis.
-# silent! %s!<title role="casename">Citing !<emphasis role="italic">Citing</emphasis> <title role="casename">!g
-
+	# Removes wrongly found 'In' ('In Foo v. Bar . . .') from citation titles without messing up 'In re' cases.
+        re.sub('<title role="casename">(In (?![Rr]e))', 'In <title role="casename">')
+	# As above, with 'When'
+        re.sub('<title role="casename">When ', 'When')
+	# As above, with 'Yes. '
+        re.sub('<title role="casename">Yes ', 'Yes')
+	# As above, with 'No. '
+        re.sub('<title role="casename">No ', 'No')
+	# As above, with 'Contra'. Adds emphasis.
+        re.sub('<title role="casename">Contra ', '<emphasis role="italic">Contra</emphasis> <title role="casename">')
+	# As above, with 'Accord'. Adds emphasis.
+        re.sub('<title role="casename">Accord ', '<emphasis role="italic">Accord</emphasis> <title role="casename">')
+	# As above, with 'Compare'. Adds emphasis.
+        re.sub('<title role="casename">Compare ', '<emphasis role="italic">Compare</emphasis> <title role="casename">')
+	# As above, with 'However,'. Adds emphasis.
+        re.sub('<title role="casename">However ', '<emphasis role="italic">However</emphasis> <title role="casename">')
+	# As above, with 'See'. Adds emphasis.
+	# silent! %s!<title role="casename">See,\= !<emphasis role="italic">See</emphasis>, <title role="casename">!g
+        re.sub('<title role="casename">See,? ', '<emphasis role="italic">See</emphasis>, <title role="casename">')
+	# As above, with 'Citing'. Adds emphasis.
+        re.sub('<title role="casename">Citing ', '<emphasis role="italic">Citing</emphasis> <title role="casename">')
 # ---------------------------------------------------------------------------- #
 # Finishes the tag
 # ---------------------------------------------------------------------------- #
@@ -107,18 +114,16 @@ while 1:
 # Tag the whole citation with <bibliolist><bibliomixed>. The '\{-}' is
 # important, prevents the RegEx from finding too much.
 # silent! %s!\(<title role="casename">.\{-}</bibliomisc>\)!<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>!g
-
+        re.sub('<title role="casename">.*?</bibliomisc>', '<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>')
 # ---------------------------------------------------------------------------- #
 # More special cases, this time moving case names with necessarily variable 
 # capitalization into the tag.
 # ---------------------------------------------------------------------------- #
-
 # Moves missed 'ex rel.' into the title tag.
-# silent! %s!\([Ee]x [Rr]el\. \)<bibliolist>!<bibliolist>\1 !g
-
+	re.sub('([Ee]x [Rr]el\. )<bibliolist>', '<bibliolist>\1')
 # Moves missed 'ex parte' into the title tag.
 # silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
-
+	re.sub('([Ee]x [Pp]arte )<bibliolist>', '<bibliolist>\1')
 # ---------------------------------------------------------------------------- #
 # Emphasize flags
 #
@@ -207,20 +212,7 @@ while 1:
 # . . . and then tags them in italic
 # silent! %s!\(\(\<[A-Z][A-Za-z,\-\.()'#;&]\+ \)*\)v\. \([A-Za-z0-9,\-\.()'#;& ]\+\), \(\d\+\) \(WL\|LEXIS\) \(\d\+\)[\., ]!<emphasis role="italic">\1v. \3</emphasis>, \4 \5 \6!g
 
-# ---------------------------------------------------------------------------- #
-# Adds '\r' to help with the formating, like so:
-#
-# <para> Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-#        <bibliolist><bibliomixed>
-#                <title role="casename">Weems v. Citigroup, Inc.</title>,
-#                        <bibliomisc>
-#                                <citation>289 Conn. 769</citation>
-#                                <phrase role="dept_and_year">(2008)</phrase>
-#                        </bibliomisc>
-#        </bibliomixed></bibliolist>
-#Lorem ipsum dolor sit amet, consectetur adipiscing elit. </para>
-# ---------------------------------------------------------------------------- #
-
+# XML formatting
 # silent! %s!\(<bibliolist><bibliomixed>.\{-}</bibliomixed></bibliolist>\)!\r\1!g
 # silent! %s!\(<title.\{-}</title>, \)!\r\1!g
 # silent! %s!\(<bibliomisc>.\{-}</bibliomisc>\)!\r\1!g
