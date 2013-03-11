@@ -14,7 +14,7 @@ Currently refactoring code so that it can do everything the original vim script 
 Will be able to identify and manipulate these elements:
 
 ## Standard Citations
-
+`
 Foo v. Bar, 123 AB.&C 456 (2002).
 Composition: casename, citation, date
 	
@@ -35,11 +35,11 @@ Composition: casename, citation, date, flag, clag citation, date
 
 Foo, 123 ABC at 155 (1929).
 Composition: short casename, at citation, date
-
+`
 ## Case names
 
 Case names can be divided into smaller chunks, but are always ended in a comma.
-
+`
 Foo v. Bar,
 Foo v. Bar, Inc.,
 Insurance Society of Foo v. O'Bar,
@@ -118,11 +118,11 @@ ___ ABC ___,
 			reporter(BCA)
 			page(987)
 		date(1929)	
-
+`
 ## Better taxonomy
 
 Need to add: Opinion Description, Flags, Subsequent History, and Prior History
-
+`
 def citation():
 	title
 		plaintiff
@@ -259,3 +259,4 @@ Year
 Weight of authority
 History action
 History cite
+`
