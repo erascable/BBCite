@@ -44,6 +44,7 @@ with open(f, 'w')
 # File manipulation
 # ---------------------------------------------------------------------------- # 
 
+# using '1' instead of 'True' is a python 2.x trick. 3.0 will require True.
 while 1:
     lines = f.readlines(100000)
     if not lines:
