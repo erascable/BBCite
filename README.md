@@ -14,66 +14,66 @@ Currently refactoring code so that it can do everything the original vim script 
 Will be able to identify and manipulate these elements:
 
 ## Standard Citations
-`
-Foo v. Bar, 123 AB.&C 456 (2002).
-Composition: casename, citation, date
+
+	Foo v. Bar, 123 AB.&C 456 (2002).
+	Composition: casename, citation, date
 	
-Foo v. Bar, Inc., 123 ABC 456, 789 (1932);
-Composition: casename, citation, pinpoint citation, date
+	Foo v. Bar, Inc., 123 ABC 456, 789 (1932);
+	Composition: casename, citation, pinpoint citation, date
 
-Foo O'Bar v. Bar, 123 ABC 456, 321 DEF2d. 678 (USSC 1999),
-Composition: casename, citation, parallel citation 1, date
+	Foo O'Bar v. Bar, 123 ABC 456, 321 DEF2d. 678 (USSC 1999),
+	Composition: casename, citation, parallel citation 1, date
 
-Foo of Bar v. Bar, Inc, 123 ABC 456, n. *8 ('t Hooft, 1992),
-Composition: casename, citation, footnote citation, date
+	Foo of Bar v. Bar, Inc, 123 ABC 456, n. *8 ('t Hooft, 1992),
+	Composition: casename, citation, footnote citation, date
 
-In re Bar, 789 ABC 987, 800, 123 DEF 456, 201, 222 GHI 333, 300 (remanded 1920);
-Composition: casename, citation, parallel citation 1, parallel citation 2, date
+	In re Bar, 789 ABC 987, 800, 123 DEF 456, 201, 222 GHI 333, 300 (remanded 1920);
+	Composition: casename, citation, parallel citation 1, parallel citation 2, date
 
-Foo v. Bar, 123 ABC 456 (D.C. Cir. 1983), rev'd 222 GHI 444 (1984).
-Composition: casename, citation, date, flag, clag citation, date
+	Foo v. Bar, 123 ABC 456 (D.C. Cir. 1983), rev'd 222 GHI 444 (1984).
+	Composition: casename, citation, date, flag, clag citation, date
 
-Foo, 123 ABC at 155 (1929).
-Composition: short casename, at citation, date
-`
+	Foo, 123 ABC at 155 (1929).
+	Composition: short casename, at citation, date
+
 ## Case names
 
 Case names can be divided into smaller chunks, but are always ended in a comma.
-`
-Foo v. Bar,
-Foo v. Bar, Inc.,
-Insurance Society of Foo v. O'Bar,
-	title(plaintiff, v, defendant)
+
+	Foo v. Bar,
+	Foo v. Bar, Inc.,
+	Insurance Society of Foo v. O'Bar,
+		title(plaintiff, v, defendant)
 		plaintiff('Foo')
 		defendant('Bar', 'Bar, Inc.')
 		v('v.', 'vs.', 'v', 'vs') [various capitulations]
 
-In re Foo,
-In regards to Foo,
-In the matter of Foo,
-Ex rel Bar,
-Ex relatione Bar,
-	latin_casename('In re', 'In the matter of', 'Ex rel', 'Ex rel.') [various capitalizations and punctuation]
-	latin_casename(latin, name)
+	In re Foo,
+	In regards to Foo,
+	In the matter of Foo,
+	Ex rel Bar,
+	Ex relatione Bar,
+		latin_casename('In re', 'In the matter of', 'Ex rel', 'Ex rel.') [various capitalizations and punctuation]
+		latin_casename(latin, name)
 
 ## Date
 
-(1929)
-(D.C Cir. 1983)
-(Johnson, 1999)
-	date(judge, disposition, department, year)
-	date()
-		year()
-		department()
-		judge()
+	(1929)
+	(D.C Cir. 1983)
+	(Johnson, 1999)
+		date(judge, disposition, department, year)
+		date()
+			year()
+			department()
+			judge()
 
 ## Citation
 
-123 ABC 456,
-456 BC.2d 987, 1000,
-___ ABC ___,
-789 ABC 987, 800, 123 DEF 456, 201, 222 GHI 333, 300
-123 ABC 456 (1928), rev'd 456 BCA 987 (1929).
+	123 ABC 456,
+	456 BC.2d 987, 1000,
+	___ ABC ___,
+	789 ABC 987, 800, 123 DEF 456, 201, 222 GHI 333, 300
+	123 ABC 456 (1928), rev'd 456 BCA 987 (1929).
 
 	citation(123 ABC 456)
 		book(123)
@@ -118,12 +118,12 @@ ___ ABC ___,
 			reporter(BCA)
 			page(987)
 		date(1929)	
-`
+
 ## Better taxonomy
 
 Need to add: Opinion Description, Flags, Subsequent History, and Prior History
-`
-def citation():
+
+	def citation():
 	title
 		plaintiff
 		defendant
@@ -163,7 +163,7 @@ def citation():
 	flag_c
 		prior_history
 	
-def latin_citation():
+	def latin_citation():
 	title
 		name
 	citation
@@ -189,7 +189,7 @@ def latin_citation():
 		judge
 		year
 
-def short_citation
+	def short_citation
 	title
 	citation
 	year	
@@ -259,4 +259,3 @@ Year
 Weight of authority
 History action
 History cite
-`
