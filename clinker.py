@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------- #
-#			      C A S E L I N K E R 			       #
+#			     	  B B C I T E 				       #
 # 									       #
 # This script breaks down cases and adds the correct tags. Needs to handle     #
 # footnotes citations such as '536 A.2d 1337 n. 4' and citations with flags in #
@@ -10,32 +10,34 @@
 # again with a different regular expression, again adding XML as it goes. In   #
 # this way it works from right to left to build up a citation. 		       #
 # 									       #
+# Converts: 								       #
+# 									       #
+# "Lorem ipsum dolor sit amet, consectetur dipiscing elit. Weems v.Citigroup,  #
+# Inc., 289 Conn. 769 (2008)." 						       #
+# 									       #
+# Into the following: 							       #
+# 									       #
+# <para> Lorem ipsum dolor sit amet, consectetur adipiscing elit 	       #
+#        <bibliolist><bibliomixed> 					       #
+#                <title role="casename">Weems v. Citigroup, Inc.</title>,      #
+#                        <bibliomisc> 					       #
+#                                <citation>289 Conn. 769</citation> 	       #
+#                                <phrase role="dept_and_year">(2008)</phrase>  #
+#                        </bibliomisc>  				       #
+#        </bibliomixed></bibliolist> 					       #
+# .</para> 								       #
 # ---------------------------------------------------------------------------- #
 
-# ---------------------------------------------------------------------------- #
-# Converts Lorem ipsum dolor sit amet, consectetur dipiscing elit. Weems v.
-# Citigroup, Inc., 289 Conn. 769 (2008).
-# 
-# Into the following:
-#
-# <para> Lorem ipsum dolor sit amet, consectetur adipiscing elit
-#        <bibliolist><bibliomixed>
-#                <title role="casename">Weems v. Citigroup, Inc.</title>,
-#                        <bibliomisc>
-#                                <citation>289 Conn. 769</citation>
-#                                <phrase role="dept_and_year">(2008)</phrase>
-#                        </bibliomisc>
-#        </bibliomixed></bibliolist>
-# .</para> 
-# ---------------------------------------------------------------------------- #
+# TODO remove "\'" characters from final copy. Currently inserted to not drive the syntax wild.
 
 import os
+import datetime
 
-targetfile = "FILE.xml"
-os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+".xml~")
-f = open(os.path.realpath(targetfile), "w")
+targetfile = 'FILE.xml'
+os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
+f = open(os.path.realpath(targetfile), 'w')
 
-with open('f', 'w')
+with open(f, 'w')
     data = file.readlines()
 
 # ---------------------------------------------------------------------------- # 
@@ -103,26 +105,23 @@ while 1:
 	# As above, with 'However,'. Adds emphasis.
         re.sub('<title role="casename">However ', '<emphasis role="italic">However</emphasis> <title role="casename">')
 	# As above, with 'See'. Adds emphasis.
-	# silent! %s!<title role="casename">See,\= !<emphasis role="italic">See</emphasis>, <title role="casename">!g
         re.sub('<title role="casename">See,? ', '<emphasis role="italic">See</emphasis>, <title role="casename">')
 	# As above, with 'Citing'. Adds emphasis.
         re.sub('<title role="casename">Citing ', '<emphasis role="italic">Citing</emphasis> <title role="casename">')
 # ---------------------------------------------------------------------------- #
 # Finishes the tag
-# ---------------------------------------------------------------------------- #
-
 # Tag the whole citation with <bibliolist><bibliomixed>. The '\{-}' is
 # important, prevents the RegEx from finding too much.
-# silent! %s!\(<title role="casename">.\{-}</bibliomisc>\)!<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>!g
+# ---------------------------------------------------------------------------- # 
         re.sub('<title role="casename">.*?</bibliomisc>', '<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>')
 # ---------------------------------------------------------------------------- #
 # More special cases, this time moving case names with necessarily variable 
 # capitalization into the tag.
 # ---------------------------------------------------------------------------- #
-# Moves missed 'ex rel.' into the title tag.
+	# Moves missed 'ex rel.' into the title tag.
 	re.sub('([Ee]x [Rr]el\. )<bibliolist>', '<bibliolist>\1')
-# Moves missed 'ex parte' into the title tag.
-# silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
+	# Moves missed 'ex parte' into the title tag.
+	# silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
 	re.sub('([Ee]x [Pp]arte )<bibliolist>', '<bibliolist>\1')
 # ---------------------------------------------------------------------------- #
 # Emphasize flags
@@ -224,6 +223,6 @@ while 1:
 
     else:
         break
-
-f.write('<!-- BBCite on DATE -->')
+# TODO: Figure out how to write this a on line 3, since marklogic strips everything on earlier lines.
+f.write('<!-- Edited by BBCite on ', time.strftime(%Y : %m : %d : %H : %M : %S), ' -->')
 f.close()
