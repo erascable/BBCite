@@ -28,10 +28,20 @@
 # .</para> 								       #
 # ---------------------------------------------------------------------------- #
 
-# TODO remove "\'" characters from final copy. Currently inserted to not drive the syntax wild.
+# TODO etree / lxml to make the xml parts look nicer.
 
 import os
 import datetime
+# import xml.etree.ElementTree as ET
+
+# bibliolist = Element('bibliolist')
+# bibliomixed = SubElement(bibliolist, 'bibliomixed')
+# title = SubElement(bibliomixed, 'title')
+# title.set('role', 'casename')
+# bibliomisc = SubElement(title, 'bibliomisc')
+# citation = SubElement(bibliomisc, 'citaton')
+# phrase = SubElement(bibliomisc, 'phrase')
+# phrase.set('role', dept_and_year')
 
 targetfile = 'FILE.xml'
 os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
@@ -225,5 +235,5 @@ while 1:
     else:
         break
 # TODO: Figure out how to write this a on line 3, since marklogic strips everything on earlier lines.
-f.write('<!-- Edited by BBCite on ', time.strftime(%Y : %m : %d : %H : %M : %S), ' -->')
+f.write.comment('<!-- Edited by BBCite on ', time.strftime(%Y : %m : %d : %H : %M : %S), ' -->')
 f.close()
