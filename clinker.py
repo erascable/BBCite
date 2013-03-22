@@ -28,9 +28,9 @@
 # .</para> 								       #
 # ---------------------------------------------------------------------------- #
 
-# TODO etree / lxml to make the xml parts look nicer.
+# TODO: etree / lxml to make the xml parts look nicer.
 
-import os
+import re
 import datetime
 # import xml.etree.ElementTree as ET
 
@@ -43,97 +43,133 @@ import datetime
 # phrase = SubElement(bibliomisc, 'phrase')
 # phrase.set('role', dept_and_year')
 
-targetfile = 'FILE.xml'
+targetfile = 'test.xml'
 os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
 f = open(os.path.realpath(targetfile), 'w')
-
-with open(f, 'w')
-    data = file.readlines()
 
 # ---------------------------------------------------------------------------- # 
 # File manipulation
 # ---------------------------------------------------------------------------- # 
 
-# using '1' instead of 'True' is a python 2.x trick. 3.0 will require True.
-while 1:
-    lines = f.readlines(100000)
-    if not lines:
+for line in f:
+
+    if not line:
         break
-    for line in lines:
-        f.replace(' vs. ', ' v. ')
-	# Tag the <phrase>. 
-	# The leading '(\d )' ensures that we exclude things like '(Exhibit T. 1732)' 
-	# by looking for the end of the case citation before it.
-        re.sub('\d,?)(\([\w,\'\. ]*\d{4}\))([\.;, ]?])', '\1<phrase role="dept_and_year">\2</phrase>\3')
-	# Tag any cases already tagged with a <phrase> with <citation> and 
-	# <citation role="parallel_citation">. Semicolon catches ';' in '&amp;'. 
-	# The '\*' asterisk catches those star cites (*7) that copypasta attorneys 
-	# like to use from Lexis.
-        re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', ', <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase>')
-	# Tag the <citation> (without parallel cites). Will catch trailing pinpoint
-	# citations.
-        re.sub(', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', ', <citation>\1</citation> <phrase')
-	# Tag the <citation> for citing footnotes.
-        re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', ', <citaiton>\1</citation> <phrase')
-	# Tag citation and phrase with <bibliomisc>. The \{-} is important, otherwise
-	# the search is too greedy and finds whole paragraph.
-        re.sub('<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>')
-	# Tag the <title>. This regex looks for a string of words that have leading 
-	# capitol letters followed by a 'v.' and terminates on the following 
-	# <bibliomisc> tag. While this catches plaintiffs with multiple names, it will
-	# catch the 'When' in 'When Frank Rizzo, Inc. v. Foo was decided . . .' These
-	# false positives are removed by later regexs. This algorithm will miss
-	# 'Insurance Society of' in 'Insurance Society of Pennsylvania' or the ''t' in
-	# case names like ''t Hooft v. Smith' because it is looking for a string
-	# of capitalized words.
-        re.sub('(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', '<title role="casename">\1v. \3</title>, <bibliomisc')
+
+    # TODO: compile all of these regexes into nicer forms. 
+    line.replace(' vs. ', ' v. ')
+
+    # Tag the <phrase>. 
+    # The leading '(\d )' ensures that we exclude things like '(Exhibit T. 1732)' 
+    # by looking for the end of the case citation before it.
+    re.sub(r'\d,?) (\([\w,\'\. ]*\d{4}\))([\.;, ]?])', 
+			'\1<phrase role="dept_and_year">\2</phrase>\3', 'line')
+
+    # Tag any cases already tagged with a <phrase> with <citation> and 
+    # <citation role="parallel_citation">. Semicolon catches ';' in '&amp;'. 
+    # The '\*' asterisk catches those star cites (*7) that copypasta attorneys 
+    # like to use from Lexis.
+    re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', 
+			', <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase>', 'line')
+
+    # Tag the <citation> (without parallel cites). Will catch trailing pinpoint
+    # citations.
+    re.sub(r', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', 
+			', <citation>\1</citation> <phrase', 'line')
+
+    # Tag the <citation> for citing footnotes.
+    re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', 
+			', <citaiton>\1</citation> <phrase', 'line')
+
+    # Tag citation and phrase with <bibliomisc>. The \{-} is important, otherwise
+    # the search is too greedy and finds whole paragraph.
+    re.sub(r'<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>', 'line')
+
+    # Tag the <title>. This regex looks for a string of words that have leading 
+    # capitol letters followed by a 'v.' and terminates on the following 
+    # <bibliomisc> tag. While this catches plaintiffs with multiple names, it will
+    # catch the 'When' in 'When Frank Rizzo, Inc. v. Foo was decided . . .' These
+    # false positives are removed by later regexs. This algorithm will miss
+    # 'Insurance Society of' in 'Insurance Society of Pennsylvania' or the ''t' in
+    # case names like ''t Hooft v. Smith' because it is looking for a string
+    # of capitalized words.
+    re.sub(r'(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', 
+			'<title role="casename">\1v. \3</title>, <bibliomisc', 'line')
+
 # ---------------------------------------------------------------------------- # 
 # Special Cases
 # ---------------------------------------------------------------------------- # 
-	# Finds and tags with <title> 'In re Foo'.
-        re.sub('[Ii]n [Rr]e [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
-	# Finds and tags 'Ex rel. Foo'.
-        re.sub('[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', '<title role="casename">\1</title>, <bibliomisc')
+
+    # Finds and tags with <title> 'In re Foo'.
+    re.sub(r'[Ii]n [Rr]e [\w\' ]+), <bibliomisc', 
+			'<title role="casename">\1</title>, <bibliomisc', 'line')
+    # Finds and tags 'Ex rel. Foo'.
+    re.sub(r'[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', 
+			'<title role="casename">\1</title>, <bibliomisc', 'line')
 # ---------------------------------------------------------------------------- #
 # Removing incorrectly tagged words, mostly because they lead a sentence and 
 # are capitalized.
 # Emphasizes flags.
 # ---------------------------------------------------------------------------- #
-	# Removes wrongly found 'In' ('In Foo v. Bar . . .') from citation titles without messing up 'In re' cases.
-        re.sub('<title role="casename">(In (?![Rr]e))', 'In <title role="casename">')
-	# As above, with 'When'
-        re.sub('<title role="casename">When ', 'When')
-	# As above, with 'Yes. '
-        re.sub('<title role="casename">Yes ', 'Yes')
-	# As above, with 'No. '
-        re.sub('<title role="casename">No ', 'No')
-	# As above, with 'Contra'. Adds emphasis.
-        re.sub('<title role="casename">Contra ', '<emphasis role="italic">Contra</emphasis> <title role="casename">')
-	# As above, with 'Accord'. Adds emphasis.
-        re.sub('<title role="casename">Accord ', '<emphasis role="italic">Accord</emphasis> <title role="casename">')
-	# As above, with 'Compare'. Adds emphasis.
-        re.sub('<title role="casename">Compare ', '<emphasis role="italic">Compare</emphasis> <title role="casename">')
-	# As above, with 'However,'. Adds emphasis.
-        re.sub('<title role="casename">However ', '<emphasis role="italic">However</emphasis> <title role="casename">')
-	# As above, with 'See'. Adds emphasis.
-        re.sub('<title role="casename">See,? ', '<emphasis role="italic">See</emphasis>, <title role="casename">')
-	# As above, with 'Citing'. Adds emphasis.
-        re.sub('<title role="casename">Citing ', '<emphasis role="italic">Citing</emphasis> <title role="casename">')
+
+    # Removes wrongly found 'In' ('In Foo v. Bar . . .', 'line') from citation titles without messing up 'In re' cases.
+    re.sub(r'<title role="casename">(In (?![Rr]e))', 
+			'In <title role="casename">', 'line')
+
+    # As above, with 'When'
+    re.sub(r'<title role="casename">When ', 'When <title role="casename">', 'line')
+
+    # As above, with 'Yes. '
+    re.sub(r'<title role="casename">Yes ', 'Yes <title role="casename">', 'line')
+
+    # As above, with 'No. '
+    re.sub(r'<title role="casename">No ', 'No <title role="casename">', 'line')
+
+    # As above, with 'Contra'. Adds emphasis.
+    re.sub(r'<title role="casename">Contra ', 
+			'<emphasis role="italic">Contra</emphasis> <title role="casename">', 'line')
+
+    # As above, with 'Accord'. Adds emphasis.
+    re.sub(r'<title role="casename">Accord ', 
+			'<emphasis role="italic">Accord</emphasis> <title role="casename">', 'line')
+
+    # As above, with 'Compare'. Adds emphasis.
+    re.sub(r'<title role="casename">Compare ', 
+			'<emphasis role="italic">Compare</emphasis> <title role="casename">', 'line')
+
+    # As above, with 'However,'. Adds emphasis.
+    re.sub(r'<title role="casename">However ', 
+			'<emphasis role="italic">However</emphasis> <title role="casename">', 'line')
+
+    # As above, with 'See'. Adds emphasis.
+    re.sub(r'<title role="casename">See,? ', 
+			'<emphasis role="italic">See</emphasis>, <title role="casename">', 'line')
+
+    # As above, with 'Citing'. Adds emphasis.
+    re.sub(r'<title role="casename">Citing ', 
+			'<emphasis role="italic">Citing</emphasis> <title role="casename">', 'line')
+
 # ---------------------------------------------------------------------------- #
 # Finishes the tag
 # Tag the whole citation with <bibliolist><bibliomixed>. The '\{-}' is
 # important, prevents the RegEx from finding too much.
 # ---------------------------------------------------------------------------- # 
-        re.sub('<title role="casename">.*?</bibliomisc>', '<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>')
+
+    re.sub(r'<title role="casename">.*?</bibliomisc>', 
+			'<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>', 'line')
+
 # ---------------------------------------------------------------------------- #
 # More special cases, this time moving case names with necessarily variable 
 # capitalization into the tag.
 # ---------------------------------------------------------------------------- #
-	# Moves missed 'ex rel.' into the title tag.
-	re.sub('([Ee]x [Rr]el\. )<bibliolist>', '<bibliolist>\1')
-	# Moves missed 'ex parte' into the title tag.
-	# silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
-	re.sub('([Ee]x [Pp]arte )<bibliolist>', '<bibliolist>\1')
+
+    # Moves missed 'ex rel.' into the title tag.
+    re.sub(r'([Ee]x [Rr]el\. )<bibliolist>', '<bibliolist>\1', 'line')
+
+    # Moves missed 'ex parte' into the title tag.
+    # silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
+    re.sub(r'([Ee]x [Pp]arte )<bibliolist>', '<bibliolist>\1', 'line')
+
 # ---------------------------------------------------------------------------- #
 # Emphasize flags
 #
@@ -232,8 +268,17 @@ while 1:
 # silent! %s!</bibliomisc>!\r&!g
 # silent! %s!</bibliomixed></bibliolist>[\.,; ]!\r&\r!g
 
-    else:
-        break
-# TODO: Figure out how to write this a on line 3, since marklogic strips everything on earlier lines.
-f.write.comment('<!-- Edited by BBCite on ', time.strftime(%Y : %m : %d : %H : %M : %S), ' -->')
+#    else:
+#        break
+
+with open ('test.txt', 'r') as f:
+	data = file.readlines()
+
+print data
+
+data[2] = '<!-- Edited by BBCite on ', time.strftime(%Y : %m : %d : %H : %M : %S), ' -->\n'
+
+with open('test.txt', 'w') as f:
+	f.writelines( data )
+
 f.close()
