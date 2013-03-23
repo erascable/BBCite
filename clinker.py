@@ -30,8 +30,15 @@
 
 # TODO: etree / lxml to make the xml parts look nicer.
 
+<<<<<<< HEAD
 import re
+=======
+>>>>>>> General cleaning and formatting
 import datetime
+import fileinput
+import os
+import re
+import sys
 # import xml.etree.ElementTree as ET
 
 # bibliolist = Element('bibliolist')
@@ -43,10 +50,20 @@ import datetime
 # phrase = SubElement(bibliomisc, 'phrase')
 # phrase.set('role', dept_and_year')
 
+<<<<<<< HEAD
 targetfile = 'test.xml'
 os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
 f = open(os.path.realpath(targetfile), 'w')
 
+=======
+# targetfile = 'FILE.xml'
+# os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
+# f = open(os.path.realpath(targetfile), 'w')
+
+# with open(f, 'w')
+#     data = file.readlines()
+
+>>>>>>> General cleaning and formatting
 # ---------------------------------------------------------------------------- # 
 # File manipulation
 # ---------------------------------------------------------------------------- # 
