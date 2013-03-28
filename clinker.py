@@ -30,10 +30,6 @@
 
 # TODO: etree / lxml to make the xml parts look nicer.
 
-<<<<<<< HEAD
-import re
-=======
->>>>>>> General cleaning and formatting
 import datetime
 import fileinput
 import os
@@ -50,12 +46,10 @@ import sys
 # phrase = SubElement(bibliomisc, 'phrase')
 # phrase.set('role', dept_and_year')
 
-<<<<<<< HEAD
 targetfile = 'test.xml'
 os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
 f = open(os.path.realpath(targetfile), 'w')
 
-=======
 # targetfile = 'FILE.xml'
 # os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
 # f = open(os.path.realpath(targetfile), 'w')
@@ -63,7 +57,6 @@ f = open(os.path.realpath(targetfile), 'w')
 # with open(f, 'w')
 #     data = file.readlines()
 
->>>>>>> General cleaning and formatting
 # ---------------------------------------------------------------------------- # 
 # File manipulation
 # ---------------------------------------------------------------------------- # 
@@ -74,33 +67,33 @@ for line in f:
         break
 
     # TODO: compile all of these regexes into nicer forms. 
-    line.replace(' vs. ', ' v. ')
+    line = line.replace(' vs. ', ' v. ')
 
     # Tag the <phrase>. 
     # The leading '(\d )' ensures that we exclude things like '(Exhibit T. 1732)' 
     # by looking for the end of the case citation before it.
-    re.sub(r'\d,?) (\([\w,\'\. ]*\d{4}\))([\.;, ]?])', 
+    line = re.sub(r'\d,?) (\([\w,\'\. ]*\d{4}\))([\.;, ]?])', 
 			'\1<phrase role="dept_and_year">\2</phrase>\3', 'line')
 
     # Tag any cases already tagged with a <phrase> with <citation> and 
     # <citation role="parallel_citation">. Semicolon catches ';' in '&amp;'. 
     # The '\*' asterisk catches those star cites (*7) that copypasta attorneys 
     # like to use from Lexis.
-    re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', 
+    line = re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', 
 			', <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase>', 'line')
 
     # Tag the <citation> (without parallel cites). Will catch trailing pinpoint
     # citations.
-    re.sub(r', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', 
+    line = re.sub(r', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', 
 			', <citation>\1</citation> <phrase', 'line')
 
     # Tag the <citation> for citing footnotes.
-    re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', 
+    line = re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', 
 			', <citaiton>\1</citation> <phrase', 'line')
 
     # Tag citation and phrase with <bibliomisc>. The \{-} is important, otherwise
     # the search is too greedy and finds whole paragraph.
-    re.sub(r'<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>', 'line')
+    line = re.sub(r'<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>', 'line')
 
     # Tag the <title>. This regex looks for a string of words that have leading 
     # capitol letters followed by a 'v.' and terminates on the following 
@@ -110,7 +103,7 @@ for line in f:
     # 'Insurance Society of' in 'Insurance Society of Pennsylvania' or the ''t' in
     # case names like ''t Hooft v. Smith' because it is looking for a string
     # of capitalized words.
-    re.sub(r'(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', 
+    line = re.sub(r'(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', 
 			'<title role="casename">\1v. \3</title>, <bibliomisc', 'line')
 
 # ---------------------------------------------------------------------------- # 
@@ -118,10 +111,10 @@ for line in f:
 # ---------------------------------------------------------------------------- # 
 
     # Finds and tags with <title> 'In re Foo'.
-    re.sub(r'[Ii]n [Rr]e [\w\' ]+), <bibliomisc', 
+    line = re.sub(r'[Ii]n [Rr]e [\w\' ]+), <bibliomisc', 
 			'<title role="casename">\1</title>, <bibliomisc', 'line')
     # Finds and tags 'Ex rel. Foo'.
-    re.sub(r'[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', 
+    line = re.sub(r'[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', 
 			'<title role="casename">\1</title>, <bibliomisc', 'line')
 # ---------------------------------------------------------------------------- #
 # Removing incorrectly tagged words, mostly because they lead a sentence and 
@@ -130,40 +123,40 @@ for line in f:
 # ---------------------------------------------------------------------------- #
 
     # Removes wrongly found 'In' ('In Foo v. Bar . . .', 'line') from citation titles without messing up 'In re' cases.
-    re.sub(r'<title role="casename">(In (?![Rr]e))', 
+    line = re.sub(r'<title role="casename">(In (?![Rr]e))', 
 			'In <title role="casename">', 'line')
 
     # As above, with 'When'
-    re.sub(r'<title role="casename">When ', 'When <title role="casename">', 'line')
+    line = re.sub(r'<title role="casename">When ', 'When <title role="casename">', 'line')
 
     # As above, with 'Yes. '
-    re.sub(r'<title role="casename">Yes ', 'Yes <title role="casename">', 'line')
+    line = re.sub(r'<title role="casename">Yes ', 'Yes <title role="casename">', 'line')
 
     # As above, with 'No. '
-    re.sub(r'<title role="casename">No ', 'No <title role="casename">', 'line')
+    line = re.sub(r'<title role="casename">No ', 'No <title role="casename">', 'line')
 
     # As above, with 'Contra'. Adds emphasis.
-    re.sub(r'<title role="casename">Contra ', 
+    line = re.sub(r'<title role="casename">Contra ', 
 			'<emphasis role="italic">Contra</emphasis> <title role="casename">', 'line')
 
     # As above, with 'Accord'. Adds emphasis.
-    re.sub(r'<title role="casename">Accord ', 
+    line = re.sub(r'<title role="casename">Accord ', 
 			'<emphasis role="italic">Accord</emphasis> <title role="casename">', 'line')
 
     # As above, with 'Compare'. Adds emphasis.
-    re.sub(r'<title role="casename">Compare ', 
+    line = re.sub(r'<title role="casename">Compare ', 
 			'<emphasis role="italic">Compare</emphasis> <title role="casename">', 'line')
 
     # As above, with 'However,'. Adds emphasis.
-    re.sub(r'<title role="casename">However ', 
+    line = re.sub(r'<title role="casename">However ', 
 			'<emphasis role="italic">However</emphasis> <title role="casename">', 'line')
 
     # As above, with 'See'. Adds emphasis.
-    re.sub(r'<title role="casename">See,? ', 
+    line = re.sub(r'<title role="casename">See,? ', 
 			'<emphasis role="italic">See</emphasis>, <title role="casename">', 'line')
 
     # As above, with 'Citing'. Adds emphasis.
-    re.sub(r'<title role="casename">Citing ', 
+    line = re.sub(r'<title role="casename">Citing ', 
 			'<emphasis role="italic">Citing</emphasis> <title role="casename">', 'line')
 
 # ---------------------------------------------------------------------------- #
@@ -172,7 +165,7 @@ for line in f:
 # important, prevents the RegEx from finding too much.
 # ---------------------------------------------------------------------------- # 
 
-    re.sub(r'<title role="casename">.*?</bibliomisc>', 
+    line = re.sub(r'<title role="casename">.*?</bibliomisc>', 
 			'<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>', 'line')
 
 # ---------------------------------------------------------------------------- #
@@ -181,11 +174,11 @@ for line in f:
 # ---------------------------------------------------------------------------- #
 
     # Moves missed 'ex rel.' into the title tag.
-    re.sub(r'([Ee]x [Rr]el\. )<bibliolist>', '<bibliolist>\1', 'line')
+    line = re.sub(r'([Ee]x [Rr]el\. )<bibliolist>', '<bibliolist>\1', 'line')
 
     # Moves missed 'ex parte' into the title tag.
     # silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
-    re.sub(r'([Ee]x [Pp]arte )<bibliolist>', '<bibliolist>\1', 'line')
+    line = re.sub(r'([Ee]x [Pp]arte )<bibliolist>', '<bibliolist>\1', 'line')
 
 # ---------------------------------------------------------------------------- #
 # Emphasize flags
@@ -288,14 +281,14 @@ for line in f:
 #    else:
 #        break
 
-with open ('test.txt', 'r') as f:
-	data = file.readlines()
+# with open ('test.txt', 'r') as f:
+# 	data = file.readlines()
 
-print data
+# print data
 
-data[2] = '<!-- Edited by BBCite on ', time.strftime(%Y : %m : %d : %H : %M : %S), ' -->\n'
+# data[2] = '<!-- Edited by BBCite on ', time.strftime(%Y : %m : %d : %H : %M : %S), ' -->\n'
 
-with open('test.txt', 'w') as f:
-	f.writelines( data )
+# with open('test.txt', 'w') as f:
+# 	f.writelines( data )
 
 f.close()
