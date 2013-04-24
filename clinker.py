@@ -13,11 +13,11 @@
 # Converts: 								       #
 # 									       #
 # "Lorem ipsum dolor sit amet, consectetur dipiscing elit. Weems v.Citigroup,  #
-# Inc., 289 Conn. 769 (2008)." 						       #
+# Inc., 289 Conn. 769 (2008). Lorem ipsum dolor sit amet, consectetur."        #
 # 									       #
 # Into the following: 							       #
 # 									       #
-# <para> Lorem ipsum dolor sit amet, consectetur adipiscing elit 	       #
+# <para>Lorem ipsum dolor sit amet, consectetur adipiscing elit 	       #
 #        <bibliolist><bibliomixed> 					       #
 #                <title role="casename">Weems v. Citigroup, Inc.</title>,      #
 #                        <bibliomisc> 					       #
@@ -25,7 +25,7 @@
 #                                <phrase role="dept_and_year">(2008)</phrase>  #
 #                        </bibliomisc>  				       #
 #        </bibliomixed></bibliolist> 					       #
-# .</para> 								       #
+# . Lorem ipsum dolor sit amet, consectetur.</para> 			       #
 # ---------------------------------------------------------------------------- #
 
 # TODO: etree / lxml to make the xml parts look nicer.
@@ -116,6 +116,7 @@ for line in f:
     # Finds and tags 'Ex rel. Foo'.
     line = re.sub(r'[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', 
 			'<title role="casename">\1</title>, <bibliomisc', 'line')
+
 # ---------------------------------------------------------------------------- #
 # Removing incorrectly tagged words, mostly because they lead a sentence and 
 # are capitalized.
