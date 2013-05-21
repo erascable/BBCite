@@ -12,7 +12,7 @@
 # 									       #
 # Converts: 								       #
 # 									       #
-# "Lorem ipsum dolor sit amet, consectetur dipiscing elit. Weems v.Citigroup,  #
+# "Lorem ipsum dolor sit amet, consectetur dipiscing elit. Weems v. Citigroup, #
 # Inc., 289 Conn. 769 (2008). Lorem ipsum dolor sit amet, consectetur."        #
 # 									       #
 # Into the following: 							       #
@@ -44,7 +44,7 @@ import sys
 # bibliomisc = SubElement(title, 'bibliomisc')
 # citation = SubElement(bibliomisc, 'citaton')
 # phrase = SubElement(bibliomisc, 'phrase')
-# phrase.set('role', dept_and_year')
+# phrase.set('role', 'dept_and_year')
 
 targetfile = 'test.xml'
 os.rename(os.path.realpath(targetfile), os.path.realpath(targetfile)+'.xml~')
@@ -72,28 +72,27 @@ for line in f:
     # Tag the <phrase>. 
     # The leading '(\d )' ensures that we exclude things like '(Exhibit T. 1732)' 
     # by looking for the end of the case citation before it.
-    line = re.sub(r'\d,?) (\([\w,\'\. ]*\d{4}\))([\.;, ]?])', 
+    line = re.sub('\d,?) (\([\w,\'\. ]*\d{4}\))([\.;, ]?])', 
 			'\1<phrase role="dept_and_year">\2</phrase>\3', 'line')
 
     # Tag any cases already tagged with a <phrase> with <citation> and 
     # <citation role="parallel_citation">. Semicolon catches ';' in '&amp;'. 
     # The '\*' asterisk catches those star cites (*7) that copypasta attorneys 
     # like to use from Lexis.
-    line = re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', 
+    line = re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+), ([\d_]+ [\w#&;\. ]+ [\d_\*\- ]+) <phrase', 
 			', <citation>\1</citation>, <citation role="parallel_citation">\2</citation> <phrase>', 'line')
 
     # Tag the <citation> (without parallel cites). Will catch trailing pinpoint
     # citations.
-    line = re.sub(r', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', 
+    line = re.sub(', ([\d_]* [\w#&;\.\- ]* [\d_#&;,\- ]*) <phrase', 
 			', <citation>\1</citation> <phrase', 'line')
 
     # Tag the <citation> for citing footnotes.
-    line = re.sub(r', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', 
+    line = re.sub(', ([\d_]+ [\w#&;\. ]+ [\d_\-]+ [Nn]\.[\d]*) <phrase', 
 			', <citaiton>\1</citation> <phrase', 'line')
 
-    # Tag citation and phrase with <bibliomisc>. The \{-} is important, otherwise
-    # the search is too greedy and finds whole paragraph.
-    line = re.sub(r'<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>', 'line')
+    # Tag citation and phrase with <bibliomisc>.
+    line = re.sub('<citation>.+?</phrase>', '<bibliomisc>\1</bibliomisc>', 'line')
 
     # Tag the <title>. This regex looks for a string of words that have leading 
     # capitol letters followed by a 'v.' and terminates on the following 
@@ -103,7 +102,7 @@ for line in f:
     # 'Insurance Society of' in 'Insurance Society of Pennsylvania' or the ''t' in
     # case names like ''t Hooft v. Smith' because it is looking for a string
     # of capitalized words.
-    line = re.sub(r'(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+), <bibliomisc', 
+    line = re.sub('(([A-Z][\w,\-\.\(\)\'#&;]+ )+)v\. ([\w,\-\.\(\)\'#&; ]+)', <bibliomisc', 
 			'<title role="casename">\1v. \3</title>, <bibliomisc', 'line')
 
 # ---------------------------------------------------------------------------- # 
@@ -111,16 +110,15 @@ for line in f:
 # ---------------------------------------------------------------------------- # 
 
     # Finds and tags with <title> 'In re Foo'.
-    line = re.sub(r'[Ii]n [Rr]e [\w\' ]+), <bibliomisc', 
+    line = re.sub('[Ii]n [Rr]e [A-Za-z0-9' ]+)', <bibliomisc', 
 			'<title role="casename">\1</title>, <bibliomisc', 'line')
     # Finds and tags 'Ex rel. Foo'.
-    line = re.sub(r'[Ee]x [Rr]el.? [\w\' ]+), <bibliomisc', 
+    line = re.sub('[Ee]x [Rr]el.? [A-Za-z0-9' ]+)', <bibliomisc', 
 			'<title role="casename">\1</title>, <bibliomisc', 'line')
 
 # ---------------------------------------------------------------------------- #
-# Removing incorrectly tagged words, mostly because they lead a sentence and 
-# are capitalized.
-# Emphasizes flags.
+# Removing incorrectly tagged words, mostly because they lead a sentence and
+# are capitalized. Emphasizes flags.
 # ---------------------------------------------------------------------------- #
 
     # Removes wrongly found 'In' ('In Foo v. Bar . . .', 'line') from citation titles without messing up 'In re' cases.
@@ -161,21 +159,19 @@ for line in f:
 			'<emphasis role="italic">Citing</emphasis> <title role="casename">', 'line')
 
 # ---------------------------------------------------------------------------- #
-# Finishes the tag
-# Tag the whole citation with <bibliolist><bibliomixed>. The '\{-}' is
-# important, prevents the RegEx from finding too much.
+# Finishes the tag Tag the whole citation with <bibliolist><bibliomixed>.
 # ---------------------------------------------------------------------------- # 
 
-    line = re.sub(r'<title role="casename">.*?</bibliomisc>', 
+    line = re.sub('<title role="casename">.*?</bibliomisc>', 
 			'<bibliolist><bibliomixed>\1</bibliomixed></bibliolist>', 'line')
 
 # ---------------------------------------------------------------------------- #
-# More special cases, this time moving case names with necessarily variable 
+# More special cases, this time moving case names with necessarily variable
 # capitalization into the tag.
 # ---------------------------------------------------------------------------- #
 
     # Moves missed 'ex rel.' into the title tag.
-    line = re.sub(r'([Ee]x [Rr]el\. )<bibliolist>', '<bibliolist>\1', 'line')
+    line = re.sub(r'([Ee]x [Rr]el. )<bibliolist>', '<bibliolist>\1', 'line')
 
     # Moves missed 'ex parte' into the title tag.
     # silent! %s!\([Ee]x [Pp]arte \)<bibliolist>!<bibliolist>\1 !g
@@ -193,59 +189,82 @@ for line in f:
 # remanded
 # vacated
 # appeal denied
+#
+# Also, this is where we need to use ElementTree / lxml to deal with emphasis.
+# We are getting a lot of trouble with xml " / ' overlapping and  conflicting
+# with xml " / '
+#
 # ---------------------------------------------------------------------------- #
 
 # But cf. and Cf.
 # silent! %s!But, \([Cc]f\.\)!But \1!g
 # silent! %s!\(But \)\=\([Cc]\)f\.!<emphasis role="italic">\1\2f.</emphasis>!g
+    line = re.sub(r'But, ([Cc]f.)', 'But \1', 'line')
+    line = re.sub(r'(But )?([Cc])f.', '<emphasis role="italic">\1\2f.</emphasis>', 'line')
 
 # Correct I.d.
 # silent! %s!I\.[Dd]\.!Id.!g
+    line = re.sub(r'I.[Dd].', 'Id.', 'line')
 
 # Id.
 # silent! %s!\<Id\.\>! <emphasis role="italic">&</emphasis>!g
+    line = re.sub(r'Id.', '<emphasis role="italic">Id.</emphasis>', 'line')
 
 # Ibid.
 # silent! %s!Ibid\.!<emphasis role="italic">&</emphasis>!g
+    line = re.sub(r'(?<!<emphasis>)Ibid.', '<emphasis role="italic">Ibid.</emphasis>', 'line')
 
 # Accord
 # silent! %s!\<Accord\>!<emphasis role="italic">&</emphasis> <!g
+    line = re.sub(r'(?<!<emphasis>)Accord', '<emphasis role="italic">Accord</emphasis>', 'line')
 
 # See, e.g.,
 # silent! %s!See,\= e\.g\.,\=!<emphasis role="italic">See</emphasis>, <emphasis role="italic">e.g.</emphasis>,!g
+    line = re.sub(r'(?<!<emphasis>)See,? [Ee].?[Gg].?,?', '<emphasis role="italic">See, e.g.</emphasis>,', 'line')
 
 # See also, 
 # silent! %s![Ss]ee [Aa]lso,\=!<emphasis role="italic">See also</emphasis>,!g
+    line = re.sub(r'(?<!<emphasis>)[Ss]ee [Aa]lso,?', '<emphasis role="italic">See also</emphasis>,', 'line')
 
 # See also, e.g.,
 # silent! %s![Ss]ee [Aa]lso,\= e\.g\.,!<emphasis role="italic">See also</emphasis>, <emphasis role="italic">e.g.</emphasis>,!g
+    line = re.sub(r'(?<!<emphasis>)[Ss]ee [Aa]lso,? [Ee].?[Gg].?,?', '<emphasis role="italic">See also, e.g.</emphasis>,', 'line')
 
 # But see, e.g.,
 # silent! %s!But [Ss]ee,\= e\.g\.,\=!<emphasis role="italic">But see</emphasis>, <emphasis role="italic">e.g.</emphasis>,!g
+    line = re.sub(r'(?<!<emphasis>)But [Ss]ee,? [Ee].?[Gg].?,?', '<emphasis role="italic">But see, e.g.</emphasis>,', 'line')
 
-# aff'd
+# aff'd TODO
 # silent! %s![Aa]ff'd!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub('(?<!<emphasis>)[Aa]ff\'d', '<emphasis role="italic">aff\'d</emphasis>,', 'line')
 
-# aff'd per curiam
+# aff'd per curiam TODO
 # silent! %s![Aa]ff'd per curiam!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub(('(?<!<emphasis>)[Aa]ff\'d [Pp]er [Cc]uriam', '<emphasis role="italic">aff\'d per curiam</emphasis>,', 'line')
 
 # cert. denied
 # silent! %s![Cc]ert\. [Dd]enied!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub(r'(?<!<emphasis>)[Cc]ert. [Dd]enied', '!<emphasis role="italic">cert. denied</emphasis>', 'line')
 
 # cert. dismissed
 # silent! %s![Cc]ert\. [Dd]ismissed!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub(r'(?<!<emphasis>)', '', 'line')
 
 # mem.
 # silent! %s!\<[Mm]em\.\>!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub(r'(?<!<emphasis>)', '', 'line')
 
 # rev'd on other grounds
 # silent! %s![Rr]ev'd on other grounds!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub(r'(?<!<emphasis>)', '', 'line')
 
 # rev'd in banc and rev'd en banc
 # silent! %s![Rr]ev'd [IiEe]n [Bb]anc!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub(r'(?<!<emphasis>)', '', 'line')
 
 # rev'd
 # silent! %s![Rr]ev'd!<emphasis role="italic">\L&\e</emphasis>!g
+    line = re.sub(r'(?<!<emphasis>)', '', 'line')
 
 # ---------------------------------------------------------------------------- #
 # Un-tags cases that we cannot actually link to, because they are in 
@@ -262,12 +281,15 @@ for line in f:
 
 # Finds failed tags (LEXIS and WL, mostly ) and untags them . . .
 # silent! %s#<phrase role="dept_and_year">\(([A-Za-z0-9,'\. ]*\d\d\d\d)\)<\/phrase>\(<\/bibliomisc>\)\@!#\1#g
+    line = re.sub(r'<phrase role="dept_and_year">(\([A-Za-z0-9,\'\. ]*\d{4}\))<\/phrase>(?!<\/bibliomisc>)', '\1', 'line')
 
 # Finds failed title tags and untags them
 # silent! %s#\(<bibliomixed>\)\@<!<title role="casename">\(\([A-Za-z,\-\.()'#;&]\+ \)*\)v\. \([A-Za-z0-9,\-\.()'#;& ]\+\)\)<\/title>#\2v. \4#g
+    line = re.sub(r'(?<!<bibliomixed>)<title role="casename">(.*?)v\. (.*?)<\/title>', '\1v. \2', 'line')
 
 # . . . and then tags them in italic
 # silent! %s!\(\(\<[A-Z][A-Za-z,\-\.()'#;&]\+ \)*\)v\. \([A-Za-z0-9,\-\.()'#;& ]\+\), \(\d\+\) \(WL\|LEXIS\) \(\d\+\)[\., ]!<emphasis role="italic">\1v. \3</emphasis>, \4 \5 \6!g
+    line = re.sub(r'', '', 'line')
 
 # XML formatting
 # silent! %s!\(<bibliolist><bibliomixed>.\{-}</bibliomixed></bibliolist>\)!\r\1!g
