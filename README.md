@@ -46,7 +46,7 @@ Case names can be divided into smaller chunks, but are always ended in a comma.
 		title(plaintiff, v, defendant)
 		plaintiff('Foo')
 		defendant('Bar', 'Bar, Inc.')
-		v('v.', 'vs.', 'v', 'vs') [various capitulations]
+		v('v.', 'vs.', 'v', 'vs') [various capitalizations]
 
 	In re Foo,
 	In regards to Foo,
