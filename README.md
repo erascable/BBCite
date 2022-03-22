@@ -1,11 +1,10 @@
 Citation-Parser
 ===============
 
-This is *going* to be a python 2.x library that will pull apart and return various parts of Blue Book legal citations. It relies on a vicious admixture of RegExes and pure cunning, and is practice in python. The original script has been tested on thousands of citations, and performs better than the algo used by Lexis (but not better than West).
+This is planned to be a python 3.x library that will pull apart and return various parts of Blue Book legal citations. It relies on a vicious admixture of RegExes and pure cunning, and is python practice. The original script has been tested on thousands of citations, and performs better than the algo used by Lexis (but not better than West).
 
 
 # Status
-
 
 Currently refactoring code so that it can do everything the original vim script can do.
 
@@ -22,23 +21,23 @@ Will be able to identify and manipulate these elements:
 	Composition: casename, citation, pinpoint citation, date
 
 	Foo O'Bar v. Bar, 123 ABC 456, 321 DEF2d. 678 (USSC 1999),
-	Composition: casename, citation, parallel citation 1, date
+	Composition: casename, citation, parallel citation 1, authority, date
 
 	Foo of Bar v. Bar, Inc, 123 ABC 456, n. *8 ('t Hooft, 1992),
-	Composition: casename, citation, footnote citation, date
+	Composition: casename, citation, footnote citation, authority, date
 
 	In re Bar, 789 ABC 987, 800, 123 DEF 456, 201, 222 GHI 333, 300 (remanded 1920);
 	Composition: casename, citation, parallel citation 1, parallel citation 2, date
 
 	Foo v. Bar, 123 ABC 456 (D.C. Cir. 1983), rev'd 222 GHI 444 (1984).
-	Composition: casename, citation, date, flag, clag citation, date
+	Composition: casename, citation, date, flag, flag citation, date
 
 	Foo, 123 ABC at 155 (1929).
 	Composition: short casename, at citation, date
 
 ## Case names
 
-Case names can be divided into smaller chunks, but are always ended in a comma.
+Case names can be divided into smaller chunks, but always end in a comma (assuming no typos)
 
 	Foo v. Bar,
 	Foo v. Bar, Inc.,
